@@ -6,7 +6,7 @@ return {
       detection_methods = { "pattern" },
       patterns = { ".git" },
       -- Restore session instead of opening file finder
-      silent_chdir = false,
+      silent_chdir = true,
     },
     event = "VeryLazy",
     config = function(_, opts)

@@ -7,7 +7,7 @@ return {
     model = "claude-opus-4.6",
     acp_providers = {
       ["copilot-acp"] = {
-        command = "C:/Users/mszczesn/AppData/Local/pnpm/copilot.cmd",
+        command = "copilot",
         args = { "--acp" },
       },
     },
