@@ -1,0 +1,18 @@
+tt.*
+.tests
+doc/tags
+debug
+.repro
+foo.*
+*.log
+data
+pack/
+lazy-lock.json
+node_modules/
+
+# Swap / temp files
+*.swp
+*.swo
+
+# Cache
+.cache/
