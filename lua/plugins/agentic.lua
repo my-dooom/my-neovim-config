@@ -4,10 +4,10 @@ return {
   --- @type agentic.PartialUserConfig
   opts = {
     provider = "copilot-acp",
-    model = "claude-opus-4.6",
+    model = "gpt-5.2",
     acp_providers = {
       ["copilot-acp"] = {
-        command = "C:/Users/mszczesn/AppData/Local/pnpm/copilot.cmd",
+        command = "C:/Users/miszc/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/copilot.exe",
         args = { "--acp" },
       },
     },
