@@ -1,3 +1,26 @@
+local function load_project_session(choice)
+  local persistence = require("persistence")
+  vim.cmd("cd " .. vim.fn.fnameescape(choice))
+  local session_file = persistence.current()
+
+  if vim.fn.filereadable(session_file) == 1 then
+    persistence.load()
+
+    local bufs = vim.api.nvim_list_bufs()
+    for i = #bufs, 1, -1 do
+      local bufnr = bufs[i]
+      if vim.api.nvim_buf_is_valid(bufnr)
+          and vim.api.nvim_buf_get_name(bufnr) == ""
+          and not vim.api.nvim_buf_get_option(bufnr, "modified")
+          and vim.api.nvim_buf_get_option(bufnr, "buftype") == "" then
+        pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+      end
+    end
+  else
+    vim.notify("No saved persistence session for this project.", vim.log.levels.INFO)
+  end
+end
+
 return {
   -- Project detection (uses .git to identify projects)
   {
@@ -29,12 +52,7 @@ return {
           local contents = require("project_nvim").get_recent_projects()
           vim.ui.select(contents, { prompt = "Select Project:" }, function(choice)
             if choice then
-              -- Close all buffers first
-              vim.cmd("%bdelete!")
-              -- Change to the project directory
-              vim.cmd("cd " .. choice)
-              -- Restore the session for that directory
-              require("persistence").load()
+              load_project_session(choice)
             end
           end)
         end,
@@ -55,9 +73,7 @@ return {
           local contents = require("project_nvim").get_recent_projects()
           vim.ui.select(contents, { prompt = "Select Project:" }, function(choice)
             if choice then
-              vim.cmd("%bdelete!")
-              vim.cmd("cd " .. choice)
-              require("persistence").load()
+              load_project_session(choice)
             end
           end)
         end,
