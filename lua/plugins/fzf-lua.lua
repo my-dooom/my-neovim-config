@@ -1,34 +1,41 @@
 return {
-    "ibhagwan/fzf-lua",
-    dependencies = { "nvim-tree/nvim-web-devicons" },
-    config = function()
-        local fzf = require("fzf-lua")
-        fzf.setup({})
+    {
+        "ibhagwan/fzf-lua",
+        dependencies = { "nvim-tree/nvim-web-devicons" },
+        config = function()
+            local fzf = require("fzf-lua")
+            fzf.setup({})
 
-        vim.keymap.set("n", "<leader>gb", fzf.git_bcommits, { noremap = true, silent = true, desc = "Git FZF (B)commits" })
-        vim.keymap.set("n", "<leader>gs", fzf.git_status, { noremap = true, silent = true, desc = "Git FZF (S)tatus" })
+            vim.keymap.set("n", "<leader>gb", fzf.git_bcommits, { noremap = true, silent = true, desc = "Git FZF (B)commits" })
+            vim.keymap.set("n", "<leader>gs", fzf.git_status, { noremap = true, silent = true, desc = "Git FZF (S)tatus" })
+        end,
+    },
 
-        -- Make `gI` (goto implementation) work reliably per-buffer.
-        -- Only bind fzf-lua's implementation picker when the attached server
-        -- actually supports `textDocument/implementation`; otherwise fall back
-        -- to definitions so the key is always useful for debugging.
-        vim.api.nvim_create_autocmd("LspAttach", {
-            group = vim.api.nvim_create_augroup("fzf_lua_lsp_impl", { clear = true }),
-            callback = function(args)
-                local client = vim.lsp.get_client_by_id(args.data.client_id)
-                if not client then
-                    return
-                end
-                local supports = client.supports_method
-                        and client:supports_method("textDocument/implementation")
-                local fn = supports and fzf.lsp_implementations or fzf.lsp_definitions
-                vim.keymap.set("n", "gI", fn, {
-                    buffer = args.buf,
-                    noremap = true,
-                    silent = true,
-                    desc = supports and "Goto Implementation (FZF)" or "Goto Definition (FZF, no impl)",
-                })
-            end,
-        })
-    end,
+    -- Make `gI` always useful. Pyright/basedpyright (and many other servers)
+    -- do NOT implement `textDocument/implementation`, so a plain implementation
+    -- keymap errors or stays unbound. This dispatcher uses fzf-lua's real
+    -- implementation picker where the server supports it (Go/C++/Rust/Java)
+    -- and falls back to definitions otherwise (e.g. Python), so `gI` always
+    -- jumps somewhere useful for debugging.
+    {
+        "neovim/nvim-lspconfig",
+        opts = function()
+            local keys = require("lazyvim.plugins.lsp.keymaps").get()
+            keys[#keys + 1] = {
+                "gI",
+                function()
+                    local fzf = require("fzf-lua")
+                    local opts = { jump_to_single_result = true }
+                    for _, c in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
+                        local caps = c.server_capabilities
+                        if caps and caps.implementationProvider then
+                            return fzf.lsp_implementations(opts)
+                        end
+                    end
+                    return fzf.lsp_definitions(opts)
+                end,
+                desc = "Goto Implementation / Definition (FZF)",
+            }
+        end,
+    },
 }
